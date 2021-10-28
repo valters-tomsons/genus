@@ -1,4 +1,8 @@
+using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using genus.lib;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -11,24 +15,43 @@ namespace genus.app.Graphics
         private int vertexBuffer;
         private int vertexArray;
         private int shaderHandle;
+        private int ssboHandle;
+        private IntPtr shaderDataPtr;
+
+        private readonly VirtualMachine vm = new();
 
 		public EmuWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
+			var rom = File.ReadAllBytes("../../games/TETRIS");
+
+			vm.Initialize(rom);
+			vm.Start();
 		}
 
 		protected override void OnLoad()
 		{
 			GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
+            // Bind vertices
             vertexBuffer = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
-            GL.BufferData(BufferTarget.ArrayBuffer, Constants.VertexSize, Constants.Vertices, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, Constants.VertexSize, Constants.Vertices, BufferUsageHint.StaticRead);
 
+            // Bind vertex array
             vertexArray = GL.GenVertexArray();
             GL.BindVertexArray(vertexArray);
-
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
+
+			// Initialize SSBO
+            var shaderData = CreateGraphicsData();
+			shaderDataPtr = Marshal.AllocHGlobal(Marshal.SizeOf(shaderData));
+
+			ssboHandle = GL.GenBuffer();
+
+			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, ssboHandle);
+			GL.BufferData(BufferTarget.ShaderStorageBuffer, 2048 * 8, shaderDataPtr, BufferUsageHint.DynamicCopy);
+            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, 0);
 
             // Compile Shaders
             var fragmentSrc = File.ReadAllText("../../shaders/fragment.glsl");
@@ -45,7 +68,6 @@ namespace genus.app.Graphics
 
             PrintShaderLog(vertexShader);
             PrintShaderLog(fragmentShader);
-            PrintShaderLog(100);
 
             shaderHandle = GL.CreateProgram();
             GL.AttachShader(shaderHandle, vertexShader);
@@ -65,19 +87,32 @@ namespace genus.app.Graphics
 			base.OnLoad();
 		}
 
+        private shader_data CreateGraphicsData()
+        {
+			var gfxData = new float[vm.GfxBuffer.Length / 4];
+            System.Buffer.BlockCopy(vm.GfxBuffer, 0, gfxData, 0, vm.GfxBuffer.Length);
+
+            shader_data shaderData;
+            shaderData.pixels = gfxData;
+
+            return shaderData;
+        }
+
         private void PrintShaderLog(int shader)
         {
             var info = GL.GetShaderInfoLog(shader);
 
 			if (!string.IsNullOrWhiteSpace(info))
 			{
-				System.Console.WriteLine(info);
+				Console.WriteLine(info);
+                Debugger.Break();
 			}
         }
 
 		protected override void OnRenderFrame(FrameEventArgs args)
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, ssboHandle);
             GL.UseProgram(shaderHandle);
 
             GL.BindVertexArray(vertexArray);
@@ -90,6 +125,12 @@ namespace genus.app.Graphics
 		protected override void OnUpdateFrame(FrameEventArgs args)
 		{
 			base.OnUpdateFrame(args);
+
+            var shaderData = CreateGraphicsData();
+			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, ssboHandle);
+            var gpuPtr = GL.MapBuffer(BufferTarget.ShaderStorageBuffer, BufferAccess.ReadWrite);
+			Marshal.StructureToPtr(shaderData, shaderDataPtr, false);
+            GL.UnmapBuffer(BufferTarget.ShaderStorageBuffer);
 
 			var escapeDown = KeyboardState.IsKeyDown(Keys.Escape);
 			if (escapeDown)
