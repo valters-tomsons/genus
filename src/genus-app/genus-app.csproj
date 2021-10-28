@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>genus.app</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.3" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.3" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.3" />
+    <PackageReference Include="OpenTK" Version="4.6.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\genus-lib\genus-lib.csproj" />
+  </ItemGroup>
+</Project>
