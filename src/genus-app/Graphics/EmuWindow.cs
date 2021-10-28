@@ -100,7 +100,7 @@ namespace genus.app.Graphics
 
 		protected override void OnResize(ResizeEventArgs e)
 		{
-            GL.Viewport(0, 0, 600, 300);
+            GL.Viewport(0, 0, 640, 320);
 			base.OnResize(e);
 		}
 

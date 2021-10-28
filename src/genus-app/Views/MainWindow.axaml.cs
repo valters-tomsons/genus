@@ -25,7 +25,7 @@ namespace genus.app.Views
         {
             var windowSettings = new NativeWindowSettings
             {
-                Size = new Vector2i(600, 300),
+                Size = new Vector2i(640, 320),
                 Title = "genus"
             };
 
