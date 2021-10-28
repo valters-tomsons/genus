@@ -9,6 +9,8 @@ namespace genus.lib
         private readonly Timer cpuClock;
         private readonly Timer gfxClock;
 
+        public byte[] GfxBuffer => interpreter.gfx;
+
         public VirtualMachine()
         {
             interpreter = new();
