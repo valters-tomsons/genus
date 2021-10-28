@@ -22,7 +22,7 @@ namespace genus.app.Graphics
 
 		public EmuWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
-			var rom = File.ReadAllBytes("../../games/TETRIS");
+			var rom = File.ReadAllBytes("games/TETRIS");
 
 			vm.Initialize(rom);
 			vm.Start();
@@ -45,17 +45,18 @@ namespace genus.app.Graphics
 
 			// Initialize SSBO
             var shaderData = CreateGraphicsData();
-			shaderDataPtr = Marshal.AllocHGlobal(Marshal.SizeOf(shaderData));
+            var dataSize = Marshal.SizeOf(shaderData);
+			shaderDataPtr = Marshal.AllocHGlobal(dataSize);
 
 			ssboHandle = GL.GenBuffer();
 
 			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, ssboHandle);
-			GL.BufferData(BufferTarget.ShaderStorageBuffer, 2048 * 8, shaderDataPtr, BufferUsageHint.DynamicCopy);
+			GL.BufferData(BufferTarget.ShaderStorageBuffer, dataSize, shaderDataPtr, BufferUsageHint.DynamicCopy);
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, 0);
 
             // Compile Shaders
-            var fragmentSrc = File.ReadAllText("../../shaders/fragment.glsl");
-            var vertexSrc = File.ReadAllText("../../shaders/vertex.glsl");
+            var fragmentSrc = File.ReadAllText("shaders/fragment.glsl");
+            var vertexSrc = File.ReadAllText("shaders/vertex.glsl");
 
             var vertexShader = GL.CreateShader(ShaderType.VertexShader);
             GL.ShaderSource(vertexShader, vertexSrc);
@@ -89,8 +90,13 @@ namespace genus.app.Graphics
 
         private shader_data CreateGraphicsData()
         {
-			var gfxData = new float[vm.GfxBuffer.Length / 4];
-            System.Buffer.BlockCopy(vm.GfxBuffer, 0, gfxData, 0, vm.GfxBuffer.Length);
+			var gfxData = new int[vm.GfxBuffer.Length];
+			// System.Buffer.BlockCopy(vm.GfxBuffer, 0, gfxData, 0, vm.GfxBuffer.Length);
+
+			for (var i = 0; i < vm.GfxBuffer.Length; i++)
+            {
+				gfxData[i] = vm.GfxBuffer[i];
+            }
 
             shader_data shaderData;
             shaderData.pixels = gfxData;
@@ -129,7 +135,7 @@ namespace genus.app.Graphics
             var shaderData = CreateGraphicsData();
 			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, ssboHandle);
             var gpuPtr = GL.MapBuffer(BufferTarget.ShaderStorageBuffer, BufferAccess.ReadWrite);
-			Marshal.StructureToPtr(shaderData, shaderDataPtr, false);
+			Marshal.StructureToPtr(shaderData, gpuPtr, false);
             GL.UnmapBuffer(BufferTarget.ShaderStorageBuffer);
 
 			var escapeDown = KeyboardState.IsKeyDown(Keys.Escape);

@@ -35,7 +35,7 @@ namespace genus.app.Views
 
         private async Task StartVirtualMachine()
         {
-			var rom = await File.ReadAllBytesAsync("../../games/TETRIS");
+			var rom = await File.ReadAllBytesAsync("TETRIS");
 
 			vm = new();
 			vm.Initialize(rom);

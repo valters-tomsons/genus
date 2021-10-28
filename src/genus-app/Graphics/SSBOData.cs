@@ -2,10 +2,10 @@ using System.Runtime.InteropServices;
 
 namespace genus.app.Graphics
 {
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+	[StructLayout(LayoutKind.Sequential)]
     public struct shader_data
     {
         [MarshalAs(UnmanagedType.ByValArray)]
-        public float[] pixels;
+        public int[] pixels;
     }
 }

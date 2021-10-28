@@ -6,10 +6,20 @@
     <RootNamespace>genus.app</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.3" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.3" />
@@ -17,7 +27,14 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.3" />
     <PackageReference Include="OpenTK" Version="4.6.7" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\genus-lib\genus-lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="games/TETRIS" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <None Include="shaders/vertex.glsl" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <None Include="shaders/fragment.glsl" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
   </ItemGroup>
 </Project>
